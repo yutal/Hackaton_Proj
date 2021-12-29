@@ -265,4 +265,4 @@ class GameServer:
 PORT = 2051
 HOST = None
 
-GameServer(PORT, False)
+GameServer(PORT, True)
