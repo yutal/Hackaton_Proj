@@ -134,4 +134,4 @@ class GameClient:
                 self.gameClientTCP.send(char.encode())
             except:
                 pass
-GameClient(False)
+GameClient(True)
