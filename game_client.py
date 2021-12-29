@@ -3,6 +3,7 @@ import time
 import struct
 import multiprocessing
 import getch
+import random
 
 CBOLD = '\33[1m'
 CGREY = '\33[90m'
@@ -20,7 +21,7 @@ class GameClient:
         """
 
         # Team Name !
-        self.teamName = 'Maccabi Haifa yutal'
+        self.teamName = 'Maccabi Haifa'
 
         # Initiate server UDP socket
         self.gameClientUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -55,15 +56,12 @@ class GameClient:
                 message = struct.unpack('IbH', data)
                 # Getting the server Port
                 serverPort = message[2]
-
                 # Checking message Magic Cookie
-                # 0xfeedbeef
-                if message[0] != 0xabcddcba:
+                if message[0] !=  0xabcddcba:
                     continue
-
                 # Got the offer, now to connect
                 print("Received offer from {}, attempting to connect...".format(addr[0]))
-                # Data is good, connecting to the server
+                # Connecting to the server
                 self.ConnectingToGame(addr[0], int(serverPort))
             except:
                 pass
@@ -105,7 +103,7 @@ class GameClient:
         Press as many keyboard keys as you can in 10 secs !
         """
         # Initiate PressKeys Thread
-        tPressKeys = multiprocessing.Process(target=self.PressKeys)
+        tPressKeys = multiprocessing.Process(target=self.PressKey)
         # Start the Thread
         tPressKeys.start()
         # Give the Thread 10 secs to live
@@ -125,17 +123,15 @@ class GameClient:
         else:
             print(data.decode())
 
-    def PressKeys(self):
-        # 10 secs to press, GO GO GO !
+    def PressKey(self):
+        # 10 secs to give answer, GO GO GO !
         stop_time = time.time() + 10
-        while time.time() < stop_time:
+        while time.time() < stop_time :
             try:
                 # Getting the pressed key
                 char = getch.getch()
                 # Sending it to the Server
-                self.gameClientTCP.sendall(char.encode())
+                self.gameClientTCP.send(char.encode())
             except:
                 pass
-
-
 GameClient(False)

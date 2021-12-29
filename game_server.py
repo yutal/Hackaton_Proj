@@ -7,15 +7,13 @@ import multiprocessing
 from scapy.all import get_if_addr
 import math
 
+####Style####
 CEND = '\33[0m'
 CBOLD = '\33[1m'
 CITALIC = '\33[3m'
-CURL = '\33[4m'
 CBLINK = '\33[5m'
-CBLINK2 = '\33[6m'
 CSELECTED = '\33[7m'
-
-CBLACK = '\33[30m'
+####Colors####
 CRED = '\33[31m'
 CGREEN = '\33[32m'
 CYELLOW = '\33[33m'
@@ -25,8 +23,6 @@ CBEIGE = '\33[36m'
 CWHITE = '\33[37m'
 CCYAN = '\033[36m'
 CORANGE = '\033[33m'
-
-CGREY = '\33[90m'
 CRED2 = '\33[91m'
 CGREEN2 = '\33[92m'
 CYELLOW2 = '\33[93m'
@@ -37,9 +33,7 @@ CWHITE2 = '\33[97m'
 
 GameOpenning = f'{CCYAN}{CBOLD}{CITALIC}Welcome to Quick Maths.{CEND}' + f'{CBLUE}{CITALIC}\nPlayer 1: %s\n{CEND}' + f'{CGREEN}{CITALIC}Player 2: %s\n{CEND}' + f'==\n' + f'{CRED}Please answer the following question as fast as you can:\n{CEND}' + 'How much is ' + f'%d%s%d ?'
 
-GameCloser = f'{CORANGE}{CBOLD}{CITALIC}{CSELECTED}Game over!\n{CEND}' + f'{CBLUE}{CITALIC}The correct answer was %d!\n\n{CEND}' + f'{CORANGE}{CBOLD}Congratulations to the winners: %s'
-
-GameCloser2 = f'{CBLUE2}{CBOLD}{CITALIC}{CSELECTED}Intresting Statistics :\n{CEND}' + f'{CRED2}{CITALIC}The Fastest Answer of %s was at time %d.\n{CEND}' + f'{CVIOLET2}{CITALIC} The difrenceses between the answers is: %d.{CEND}'
+GameCloser = f'{CORANGE}{CBOLD}{CITALIC}{CSELECTED}Game over!\n{CEND}' + f'{CBLUE}{CITALIC}The correct answer was %d!\n\n{CEND}' + f'{CORANGE}{CBOLD}Congratulations to the winners: %s\n' + f'{CBLUE2}{CBOLD}{CITALIC}{CSELECTED}Intresting Statistics :\n' + f'{CVIOLET2}{CITALIC} The difrenceses in time between the answers is: %s.{CEND}'
 
 
 class GameServer:
@@ -60,7 +54,7 @@ class GameServer:
         else:
             self.IP = get_if_addr('eth1')
             self.broadcastAddr = '172.1.255.255'
-
+        ##########intilliaze##########
         # Let the Server know the game start or over
         self.gameStarted = False
         # Game Timer (10 secs) until the game will start
@@ -69,37 +63,29 @@ class GameServer:
         self.players = {}
         # Lock in order to write into the dict
         self.dictLock = threading.Lock()
-
         # Assign Group number, will change in run time
         self.GroupNumber = 1
-
+        ##########Sockets##########
         # Initiate server UDP socket
         self.gameServerUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-
         # Allow more then one client to connect
         self.gameServerUDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-
         # Enable broadcasting mode
         self.gameServerUDP.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
         # Initiate server TCP socket
         self.gameServerTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Bind to the Addr and Port
         self.gameServerTCP.bind((self.IP, PORT))
-
+        ##########Threads##########
         # Initiate server broadcasting Thread
         print('Server started, listening on IP address {}'.format(self.IP))
         self.tB = threading.Thread(target=self.broadcast, args=(self.IP, self.Port))
-
         # Initiate server players collector Thread
         self.tC = threading.Thread(target=self.TCP_Connection, args=())
-
         # Semaphore to control the flowing of clients
         self.sT = threading.Semaphore()
-
         self.tB.start()
         self.tC.start()
-
         self.tB.join()
         self.tC.join()
 
@@ -116,7 +102,7 @@ class GameServer:
         while time.time() < self.timeToStart:
             # Packing the message to be sent
             message = struct.pack('IbH', 0xabcddcba, 0x2, port)
-            self.gameServerUDP.sendto(message, (self.broadcastAddr, 13117))
+            self.gameServerUDP.sendto(message, (self.broadcastAddr, 14000))
             time.sleep(1)
 
         # After the broadcast is over sending a Welcome message
@@ -153,7 +139,6 @@ class GameServer:
             # Counting the scores and decide the Winner !
             try:
                 players_names = [p for p in self.players.keys()]
-                # team_to_check = [self.players[k][0],self.players[k][3] for k in players_names if min(self.players[0][3],self.players[1][3])]
                 WinnerTeams = " "
                 if self.players[players_names[0]][3] == self.players[players_names[1]][3]:
                     WinnerTeams = "Is No One"
@@ -164,23 +149,17 @@ class GameServer:
                             team_to_check = self.players[k]
                         else:
                             team_after = self.players[k]
-                    #########
+                    #########Conditions TO WIN##########
                     if (team_to_check[2] == str(res)):
                         WinnerTeams = team_to_check[0]
                     else:
                         WinnerTeams = team_after[0]
-                        # if team_after[2] != None and team_to_check[2] != None :
-                    #     difrences = abs(team_after[2] - team_to_check[2])
-
-                    # Send all players the Game Details
+                    if team_after[2] != None and team_to_check[2] != None:
+                        difrences = team_after[3] - team_to_check[3]
+                # Send all players the Game Details
                 for player in self.players:
                     try:
-                        player.sendall((GameCloser % (res, WinnerTeams)).encode())
-                        print("this is in  end game", self.players[player])
-                        if WinnerTeams != "Is No One":
-                            if self.players[player][0] == WinnerTeams:
-                                time_winner = self.players[player][3]
-                            # player.sendall((GameCloser2 %(WinnerTeams,time_winner,4)).encode())
+                        player.sendall((GameCloser % (res, WinnerTeams, str(difrences))).encode())
                         player.close()
                     except:
                         pass
@@ -191,8 +170,8 @@ class GameServer:
         else:
             print("No Players after 10 secs, Let's try agian")
         # Reset the players dict
-        self.sT.release()
         self.players = {}
+        self.sT.release()
         # Collect new Players thro broadcast
         self.broadcast(host, port)
 
@@ -206,7 +185,7 @@ class GameServer:
         while not self.gameStarted:
             if len(threads) > 10:
                 continue
-            # Waiting 1.1 sec for late players
+            # Waiting 1.5 sec for late players
             self.gameServerTCP.settimeout(1.5)
             try:
                 self.gameServerTCP.listen()
@@ -214,9 +193,7 @@ class GameServer:
                 # Initiate Thread for each player
                 t = threading.Thread(target=self.getPlayers, args=(client, addr))
                 threads.append(t)
-                # stop_threads = False
-                # if stop_threads:
-                #     break
+                # global stop_threads = False
                 t.start()
             except:
                 pass
@@ -237,6 +214,7 @@ class GameServer:
             playerAddr (str): Player Addr
         """
         try:
+            flag = False
             # Players had 3 secs to send their Team Name
             player.settimeout(3)
             # Getting the player Team Name
@@ -245,6 +223,7 @@ class GameServer:
             # Saving the Player into the dict
             self.dictLock.acquire()
             if len(self.players) < 2:
+                flag = True
                 self.players[player] = [teamNameDecoded, self.GroupNumber, None, math.inf]
                 self.GroupNumber = (2 if self.GroupNumber == 1 else 1)
             self.dictLock.release()
@@ -253,11 +232,11 @@ class GameServer:
         except:
             return
         # Starting the Game
-        self.StartGame(player)
+        if flag:
+            self.StartGame(player)
 
     # def run():
     #     while True:
-    #     print('thread running')
     #     global stop_threads
     #     if stop_threads:
     #         break
@@ -272,18 +251,15 @@ class GameServer:
         # After game over making sure we don't stack in loop
         stop_time = time.time() + 10
         player.settimeout(1)
-
         while time.time() < stop_time:
             try:
                 keyPress = player.recv(1024)
-                # Adding the messages to his score - in the dict
-                self.players[player][2] = keyPress.decode()
-                self.players[player][3] = time.time() / 100000
-                # stop_threads = True
-                # if keyPress :
-                #     break
+                if keyPress != '' and keyPress != '\n' and keyPress != None:
+                    # Adding the messages to his score - in the dict
+                    self.players[player][2] = keyPress.decode()
+                    self.players[player][3] = time.time()
             except:
-                pass
+                continue
 
 
 PORT = 2051
