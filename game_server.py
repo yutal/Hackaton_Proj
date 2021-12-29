@@ -102,7 +102,7 @@ class GameServer:
         while time.time() < self.timeToStart:
             # Packing the message to be sent
             message = struct.pack('IbH', 0xabcddcba, 0x2, port)
-            self.gameServerUDP.sendto(message, (self.broadcastAddr, 14000))
+            self.gameServerUDP.sendto(message, (self.broadcastAddr, 13177))
             time.sleep(1)
 
         # After the broadcast is over sending a Welcome message
