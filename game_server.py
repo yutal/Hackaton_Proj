@@ -262,7 +262,7 @@ class GameServer:
                 continue
 
 
-PORT = 2151
+PORT = 2051
 HOST = None
 
 GameServer(PORT, True)
