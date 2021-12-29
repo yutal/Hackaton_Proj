@@ -30,7 +30,7 @@ class GameClient:
         self.gameClientUDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         if TEST:
-            self.gameClientUDP.bind(('172.99.255.255', 13117))
+            self.gameClientUDP.bind(('172.99.255.255', 13177))
         else:
             self.gameClientUDP.bind(('172.1.255.255', 13117))
 
