@@ -2,7 +2,7 @@ import socket
 import time
 import struct
 import multiprocessing
-import msvcrt
+import getch
 
 CBOLD = '\33[1m'
 CGREY = '\33[90m'
@@ -20,18 +20,18 @@ class GameClient:
         """
 
         # Team Name !
-        self.teamName = 'The A-Team'
+        self.teamName = 'Maccabi Haifa yutal'
 
         # Initiate server UDP socket
         self.gameClientUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 
         # Allow more then 1 Client run on the same Addr / Port (More for testing then playing)
-        self.gameClientUDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.gameClientUDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         if TEST:
             self.gameClientUDP.bind(('172.99.255.255', 13117))
         else:
-            self.gameClientUDP.bind(('192.168.1.172', 13117))
+            self.gameClientUDP.bind(('172.1.255.255', 13117))
 
         print("Client started, listening for offer requests...")
 
@@ -57,7 +57,8 @@ class GameClient:
                 serverPort = message[2]
 
                 # Checking message Magic Cookie
-                if message[0] != 0xfeedbeef:
+                # 0xfeedbeef
+                if message[0] != 0xabcddcba:
                     continue
 
                 # Got the offer, now to connect
@@ -130,7 +131,7 @@ class GameClient:
         while time.time() < stop_time:
             try:
                 # Getting the pressed key
-                char = msvcrt.getch()
+                char = getch.getch()
                 # Sending it to the Server
                 self.gameClientTCP.sendall(char.encode())
             except:
